@@ -11,12 +11,6 @@ namespace Bopapp
 
         public static void Register(HttpConfiguration config)
         {
-
-            ServicePointManager.ServerCertificateValidationCallback = new
-            RemoteCertificateValidationCallback
-            (
-                delegate { return true; }
-            );
             // Json settings
             config.Formatters.JsonFormatter.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
             config.Formatters.JsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();

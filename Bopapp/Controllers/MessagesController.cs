@@ -4,10 +4,11 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
+using System.Web.Services.Description;
 
 namespace Bopapp
 {
-   // [BotAuthentication]
+    [BotAuthentication]
     public class MessagesController : ApiController
     {
         /// <summary>
@@ -55,7 +56,7 @@ namespace Bopapp
             {
             }
 
-            return null;
+            return message.CreateReply("something received!"); ;
         }
     }
 }
