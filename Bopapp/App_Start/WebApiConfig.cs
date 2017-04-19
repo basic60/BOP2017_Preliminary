@@ -8,7 +8,6 @@ namespace Bopapp
 {
     public static class WebApiConfig
     {
-
         public static void Register(HttpConfiguration config)
         {
             // Json settings

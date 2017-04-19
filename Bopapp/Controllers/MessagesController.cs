@@ -5,6 +5,7 @@ using System.Web.Http;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using System.Web.Services.Description;
+using Bopapp.Dialogs;
 
 namespace Bopapp
 {
@@ -17,16 +18,26 @@ namespace Bopapp
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
-            if (activity.Type == ActivityTypes.Message)
+            /*  if (activity.Type == ActivityTypes.Message)
+              {
+                  await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+              }
+              else
+              {
+                  HandleSystemMessage(activity);
+              }
+              var response = Request.CreateResponse(HttpStatusCode.OK);
+              return response;*/
+            // check if activity is of type message
+            if (activity != null && activity.GetActivityType() == ActivityTypes.Message)
             {
-                await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+                await Conversation.SendAsync(activity, () => new EchoDialog());
             }
             else
             {
                 HandleSystemMessage(activity);
             }
-            var response = Request.CreateResponse(HttpStatusCode.OK);
-            return response;
+            return new HttpResponseMessage(System.Net.HttpStatusCode.Accepted);
         }
 
         private Activity HandleSystemMessage(Activity message)
