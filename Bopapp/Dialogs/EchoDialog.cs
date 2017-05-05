@@ -12,6 +12,7 @@ namespace Bopapp.Dialogs
     public class EchoDialog : IDialog<object>
     {
         protected int count = 1;
+
         public async Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
@@ -35,6 +36,7 @@ namespace Bopapp.Dialogs
                 context.Wait(MessageReceivedAsync);
             }
         }
+
         public async Task AfterResetAsync(IDialogContext context, IAwaitable<bool> argument)
         {
             var confirm = await argument;
