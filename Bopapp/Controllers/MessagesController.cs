@@ -16,13 +16,13 @@ namespace Bopapp
         /// <summary>
         /// POST: api/Messages
         /// Receive a message from a user and reply to it
+        /// 默认为POST方法，请求被映射到该函数。
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
             if (activity != null && activity.GetActivityType() == ActivityTypes.Message)
             {
-                //     await Conversation.SendAsync(activity, () => new EchoDialog());
-                    await Conversation.SendAsync(activity, () => new LuisDialog());
+                await Conversation.SendAsync(activity, () => new LuisDialog());
             }
             else
             {

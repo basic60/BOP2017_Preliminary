@@ -8,6 +8,9 @@ using Microsoft.Bot.Connector;
 
 namespace Bopapp.Dialogs
 {
+    /// <summary>
+    /// 回声应用，发什么回复什么。
+    /// </summary>
     [Serializable]
     public class EchoDialog : IDialog<object>
     {
