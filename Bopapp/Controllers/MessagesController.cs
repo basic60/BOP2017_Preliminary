@@ -22,7 +22,7 @@ namespace Bopapp
         {
             if (activity != null && activity.GetActivityType() == ActivityTypes.Message)
             {
-                await Conversation.SendAsync(activity, () => new LuisDialog());
+                await Conversation.SendAsync(activity, () => new EchoDialog());
             }
             else
             {
