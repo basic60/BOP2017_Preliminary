@@ -9,12 +9,22 @@ namespace KnowledgeNetwork
     class Entity
     {
         //实体属性列表
-        Dictionary<string, string> proplist;
+        public Dictionary<string, string> proplist;
 
-        public Entity()=> proplist=new Dictionary<string, string>();
+        public HashSet<string> islist;
 
-        public void add_property(string key,string value)=>proplist[key] = value;
+        public Entity()
+        {
+            proplist = new Dictionary<string, string>();
+            islist = new HashSet<string>();
+        }
 
-        public string get_property(string key)=>proplist.ContainsKey(key) ? proplist[key] : "__failed__";
+        public void AddProperty(string key,string value)=>proplist[key] = value;
+
+        public string GetProperty(string key)=>proplist.ContainsKey(key) ? proplist[key] : "__failed__";
+
+        public void AddIssomething(string key) => islist.Add(key);
+
+        public bool IsSomething(string key) => islist.Contains(key);
     }
 }
