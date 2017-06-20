@@ -13,6 +13,15 @@ namespace KnowledgeNetwork
 
         public HashSet<string> islist;
 
+        public string Name;
+
+        public Entity(string name)
+        {
+            Name = name;
+            proplist = new Dictionary<string, string>();
+            islist = new HashSet<string>();
+        }
+
         public Entity()
         {
             proplist = new Dictionary<string, string>();
