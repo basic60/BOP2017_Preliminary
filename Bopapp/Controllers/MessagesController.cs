@@ -58,7 +58,6 @@ namespace Bopapp
             else if (message.Type == ActivityTypes.Ping)
             {
             }
-
             return message.CreateReply("something received!"); ;
         }
     }

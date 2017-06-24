@@ -15,17 +15,21 @@ namespace KnowledgeNetwork
 
         public string Name;
 
+        public List<string> alias;
+
         public Entity(string name)
         {
             Name = name;
             proplist = new Dictionary<string, string>();
             islist = new HashSet<string>();
+            alias = new List<string>();
         }
 
         public Entity()
         {
             proplist = new Dictionary<string, string>();
             islist = new HashSet<string>();
+            alias = new List<string>();
         }
 
         public void AddProperty(string key,string value)=>proplist[key] = value;

@@ -8,7 +8,6 @@ using System.Net.Http;
 using System.Text;
 using System.Net.Http.Headers;
 using Microsoft.Bot.Connector;
-
 namespace Bopapp.Dialogs
 {
     [Serializable]
@@ -37,7 +36,6 @@ namespace Bopapp.Dialogs
             await context.PostAsync(response.ToString());
             string result = await response.Content.ReadAsStringAsync();
             await context.PostAsync(result);
-           
         }
 
         public async Task StartAsync(IDialogContext context)
