@@ -12,6 +12,7 @@ namespace Bopapp
         protected void Application_Start()
         {
             GlobalConfiguration.Configure(WebApiConfig.Register);
+            System.Configuration.ConfigurationSettings.AppSettings["JiebaConfigFileDir"] =HttpContext.Current.Server.MapPath("/Resources/");
         }
     }
 }

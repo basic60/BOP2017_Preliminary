@@ -1,12 +1,23 @@
-﻿using Microsoft.Bot.Builder.Dialogs;
+﻿using JiebaNet.Analyser;
+using JiebaNet.Segmenter;
+using JiebaNet.Segmenter.PosSeg;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Documents.Linq;
+using Microsoft.Azure.Graphs;
+using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Luis;
 using Microsoft.Bot.Builder.Luis.Models;
 using Microsoft.Bot.Connector;
+using Microsoft.IdentityModel.Protocols;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http;
 namespace Bopapp.Dialogs
@@ -14,12 +25,16 @@ namespace Bopapp.Dialogs
     /// <summary>
     /// Luis对话框，语义分析完成后的处理。
     /// </summary>
-    [LuisModel("1bf0c204-3e2b-4be3-a02a-b66f6a5f73d1", "ab09945bf0224fdb9ed956eb79683f6a")]
+    [LuisModel("fdede7ca-c1c3-43ca-b4c7-375ec27aa5e3", "7791146f5ae6432ba902a046e1a76ff9",LuisApiVersion.V2, @"southeastasia.api.cognitive.microsoft.com")]
     [Serializable]
     public class LuisDialog : LuisDialog<object>
     {
+        string endpoint = ConfigurationManager.AppSettings["Endpoint"];
+        string authKey = ConfigurationManager.AppSettings["AuthKey"];
+
         public LuisDialog()
         {
+            
         }
 
 
@@ -28,31 +43,165 @@ namespace Bopapp.Dialogs
         }
 
         #region 无法判断意图
-        [LuisIntent("")]
+        [LuisIntent("None")]
         public async Task None(IDialogContext context, LuisResult result)
         {
-            string message = $"不知道你在说什么，面壁去。。。T_T";
+            string message = $"没有相关信息。";
             await context.PostAsync(message);
             context.Wait(MessageReceived);
         }
         #endregion
 
-        #region 天气意图
-        [LuisIntent("天气查询")]
-        public async Task QueryWeather(IDialogContext context, LuisResult result)
+        #region 判断是非
+        [LuisIntent("判断是非")]
+        public async Task QueryTrueOrFalse(IDialogContext context, LuisResult result)
         {
-            await context.PostAsync("匹配结果是查询天气。");
+            string question = result.Query;StringBuilder query_str = new StringBuilder();bool Flag = false;
+            List<string> para = new List<string>();
+            foreach (var i in result.Entities)
+            { 
+                para.Add(i.Entity);
+                await context.PostAsync(i.Entity);
+            }
+            if (para.Count() == 2)
+            {
+                query_str.Append($"g.V('{para[0]}').outE('{para[1]}').inV()");
+            }
+            else if (para.Count() == 3)
+            {
+                query_str.Append($"g.V('{para[0]}').outE('{para[1]}').inV().has('id','{para[2]}')");
+            }
+            else
+            {
+                Flag = true;
+                await context.PostAsync("to be continued");
+            }
+
+
+            if (!Flag)
+            {
+                using (DocumentClient client = new DocumentClient(new Uri(endpoint), authKey,
+                 new ConnectionPolicy { ConnectionMode = ConnectionMode.Direct, ConnectionProtocol = Protocol.Tcp }))
+                {
+                    DocumentCollection graph = await client.CreateDocumentCollectionIfNotExistsAsync(
+                       UriFactory.CreateDatabaseUri("graphdb_dut"),
+                       new DocumentCollection { Id = "persons" },
+                       new RequestOptions { OfferThroughput = 1000 });
+
+                    IDocumentQuery<dynamic> query_result = client.CreateGremlinQuery<dynamic>(graph, query_str.ToString());
+                    if (!query_result.HasMoreResults)
+                    {
+                        query_str.Clear();
+                        query_str.Append($"g.V('{para[0]}'");
+                        query_result = client.CreateGremlinQuery<dynamic>(graph, query_str.ToString());
+                        while (query_result.HasMoreResults)
+                        {
+                            foreach (dynamic i in await query_result.ExecuteNextAsync())
+                            {
+                                if (i.properties.ContainsKey(para[1]))
+                                {
+                                    var res = i.properties[para[1]];
+                                    if (res == false)
+                                        await context.PostAsync("否。");
+                                    else
+                                        await context.PostAsync("是。");
+                                }
+                                else
+                                {
+                                    await context.PostAsync("没有相关信息。");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (para.Count() == 2)
+                        {
+                            bool suc = false;
+                            while (query_result.HasMoreResults)
+                            {
+                                foreach (dynamic i in await query_result.ExecuteNextAsync())
+                                {
+                                    if (question.IndexOf(i.id) != -1)
+                                    {
+                                        suc = true;
+                                        await context.PostAsync("是");
+                                    }
+                                }
+                            }
+                            if(!suc)
+                                await context.PostAsync("否");
+
+                        }
+                        else
+                            await context.PostAsync("是");
+                    }
+                }
+            }
+         
             context.Wait(MessageReceived);
         }
         #endregion
 
-        #region 时间意图
-        [LuisIntent("时间查询")]
-        public async Task QueryTime(IDialogContext context, LuisResult result)
+        #region 查询人物
+        [LuisIntent("查询人物")]
+        public async Task QueryPerson(IDialogContext context, LuisResult result)
         {
-            await context.PostAsync("匹配结果是查询时间。");
+           
+
+            await context.PostAsync("查询人物。");
             context.Wait(MessageReceived);
         }
         #endregion
+
+        #region 查询时间
+        [LuisIntent("查询时间")]
+        public async Task QueryTime(IDialogContext context, LuisResult result)
+        {
+            await context.PostAsync("查询时间。");
+            context.Wait(MessageReceived);
+        }
+        #endregion
+
+        #region 查询地点
+        [LuisIntent("查询地点")]
+        public async Task QueryLocation(IDialogContext context, LuisResult result)
+        {
+            await context.PostAsync("查询地点。");
+            context.Wait(MessageReceived);
+        }
+        #endregion
+
+        #region 查询数量
+        [LuisIntent("查询数量")]
+        public async Task QueryNumber(IDialogContext context, LuisResult result)
+        {
+            await context.PostAsync("查询数量。");
+            context.Wait(MessageReceived);
+        }
+        #endregion
+
+        public async Task Query(DocumentClient client,List<string> gremlinQueries)
+        {
+            DocumentCollection graph = await client.CreateDocumentCollectionIfNotExistsAsync(
+                UriFactory.CreateDatabaseUri("graphdb_dut"),
+                new DocumentCollection { Id = "persons" },
+                new RequestOptions { OfferThroughput = 1000 });
+
+            foreach (string i in gremlinQueries)
+            {
+                Console.WriteLine($">>Running {i}");
+                IDocumentQuery<dynamic> query = client.CreateGremlinQuery<dynamic>(graph, i);
+                while (query.HasMoreResults)
+                {
+                    foreach (dynamic result in await query.ExecuteNextAsync())
+                    {
+                        Console.WriteLine($"\t {JsonConvert.SerializeObject(result)}\n");
+                    }
+                }
+                Console.WriteLine("========================================================");
+                Console.WriteLine();
+            }
+        }
     }
 }

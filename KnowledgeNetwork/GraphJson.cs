@@ -12,6 +12,7 @@ namespace KnowledgeNetwork
         public string type;
         public string label;
         public List<Edge> outE;
+        public Dictionary<dynamic, dynamic> query;
     }
 
     public class Edge
