@@ -56,13 +56,17 @@ namespace Bopapp.Dialogs
         [LuisIntent("判断是非")]
         public async Task QueryTrueOrFalse(IDialogContext context, LuisResult result)
         {
-            string question = result.Query;StringBuilder query_str = new StringBuilder();bool Flag = false;
+            context.PostAsync("判断是非。");
+            string question = result.Query;StringBuilder query_str = new StringBuilder();
+            bool Flag = false;
             List<string> para = new List<string>();
             foreach (var i in result.Entities)
             { 
                 para.Add(i.Entity);
-                await context.PostAsync(i.Entity);
+               // await context.PostAsync(i.Entity);
             }
+
+
             if (para.Count() == 2)
             {
                 query_str.Append($"g.V('{para[0]}').outE('{para[1]}').inV()");
@@ -76,7 +80,6 @@ namespace Bopapp.Dialogs
                 Flag = true;
                 await context.PostAsync("to be continued");
             }
-
 
             if (!Flag)
             {
@@ -138,19 +141,44 @@ namespace Bopapp.Dialogs
                     }
                 }
             }
-         
             context.Wait(MessageReceived);
         }
         #endregion
 
-        #region 查询人物
-        [LuisIntent("查询人物")]
-        public async Task QueryPerson(IDialogContext context, LuisResult result)
+        #region 查询事物 
+        [LuisIntent("查询事物")]
+        public async Task QueryThing(IDialogContext context, LuisResult luis_res)
         {
-           
+            await context.PostAsync("查询事物");
+            StringBuilder tmp = new StringBuilder();
+            if (luis_res.Entities.Count() == 2)
+            {
+                tmp.Append($"g.V('{luis_res.Entities[0]}').outE('{luis_res.Entities[1]}').inV()");
+            }
+            else
+            {
+                await context.PostAsync("to be continued");
+                return;
+            }
 
-            await context.PostAsync("查询人物。");
-            context.Wait(MessageReceived);
+            string query_str = tmp.ToString();
+            using (DocumentClient client = new DocumentClient(new Uri(endpoint), authKey,
+                new ConnectionPolicy { ConnectionMode = ConnectionMode.Direct, ConnectionProtocol = Protocol.Tcp }))
+            {
+                DocumentCollection graph = await client.CreateDocumentCollectionIfNotExistsAsync(
+                   UriFactory.CreateDatabaseUri("graphdb_dut"),
+                   new DocumentCollection { Id = "persons" },
+                   new RequestOptions { OfferThroughput = 1000 });
+
+                IDocumentQuery<dynamic> query_result = client.CreateGremlinQuery<dynamic>(graph, query_str.ToString());
+                while (query_result.HasMoreResults)
+                {
+                    foreach (dynamic i in await query_result.ExecuteNextAsync())
+                    {
+                        await context.PostAsync(i.id);
+                    }
+                }
+            }
         }
         #endregion
 
@@ -163,15 +191,6 @@ namespace Bopapp.Dialogs
         }
         #endregion
 
-        #region 查询地点
-        [LuisIntent("查询地点")]
-        public async Task QueryLocation(IDialogContext context, LuisResult result)
-        {
-            await context.PostAsync("查询地点。");
-            context.Wait(MessageReceived);
-        }
-        #endregion
-
         #region 查询数量
         [LuisIntent("查询数量")]
         public async Task QueryNumber(IDialogContext context, LuisResult result)
@@ -180,28 +199,5 @@ namespace Bopapp.Dialogs
             context.Wait(MessageReceived);
         }
         #endregion
-
-        public async Task Query(DocumentClient client,List<string> gremlinQueries)
-        {
-            DocumentCollection graph = await client.CreateDocumentCollectionIfNotExistsAsync(
-                UriFactory.CreateDatabaseUri("graphdb_dut"),
-                new DocumentCollection { Id = "persons" },
-                new RequestOptions { OfferThroughput = 1000 });
-
-            foreach (string i in gremlinQueries)
-            {
-                Console.WriteLine($">>Running {i}");
-                IDocumentQuery<dynamic> query = client.CreateGremlinQuery<dynamic>(graph, i);
-                while (query.HasMoreResults)
-                {
-                    foreach (dynamic result in await query.ExecuteNextAsync())
-                    {
-                        Console.WriteLine($"\t {JsonConvert.SerializeObject(result)}\n");
-                    }
-                }
-                Console.WriteLine("========================================================");
-                Console.WriteLine();
-            }
-        }
     }
 }

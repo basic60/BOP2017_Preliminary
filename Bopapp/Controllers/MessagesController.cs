@@ -7,6 +7,7 @@ using Microsoft.Bot.Connector;
 using System.Web.Services.Description;
 using Bopapp.Dialogs;
 using System;
+using System.Text;
 
 namespace Bopapp
 {
@@ -20,10 +21,31 @@ namespace Bopapp
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
+            
             if (activity != null && activity.GetActivityType() == ActivityTypes.Message)
             {
                 //  await Conversation.SendAsync(activity, () => new EchoDialog());
-                 await Conversation.SendAsync(activity, () => new LuisDialog());
+                string str = activity.Text;int id = -1;
+                StringBuilder tmp = new StringBuilder();
+                if ((id=str.IndexOf("贵校")) != -1)
+                {
+                    tmp.Append(str.Substring(0, id));
+                    tmp.Append("大连理工大学");
+                    tmp.Append(str.Substring(id+2));
+                    activity.Text = tmp.ToString();
+                }
+                
+
+                if ((id = str.IndexOf("你们学校")) != -1)
+                {
+
+                    tmp.Append(str.Substring(0, id));
+                    tmp.Append("大连理工大学");
+                    tmp.Append(str.Substring(id + 4));
+                    activity.Text = tmp.ToString();
+                }
+                
+                await Conversation.SendAsync(activity, () => new LuisDialog());
                // await Conversation.SendAsync(activity, () => new QnaDialog());
             }
             else

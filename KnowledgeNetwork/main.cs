@@ -1,4 +1,4 @@
-Ôªøusing System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
@@ -23,23 +23,35 @@ namespace KnowledgeNetwork
     {
         static void Main(string[] args)
         {
-            /*string str = "Â§ßËøûÁêÜÂ∑•Â§ßÂ≠¶Ê†°ÈïøÊòØ‰∏çÊòØÈÉ≠‰∏úÊòéÔºü";
+
+
+            string str = "«ÎŒ —ß–£‘⁄ƒƒ"; int id = -1;
+            StringBuilder tmp = new StringBuilder();
+            if ((id = str.IndexOf("ƒ„√«—ß–£")) != -1)
+            {
+
+                tmp.Append(str.Substring(0, id));
+                tmp.Append("¥Û¡¨¿Ìπ§¥Û—ß");
+                tmp.Append(str.Substring(id + 4));
+            }
+            Console.WriteLine(tmp.ToString());
+            /*string str = "¥Û¡¨¿Ìπ§¥Û—ß–£≥§ «≤ª «π˘∂´√˜£ø";
 
             var posSeg = new PosSegmenter();
-            var s = "Â§ßËøûÁêÜÂ∑•Â§ßÂ≠¶Ê†°ÈïøÊòØ‰∏çÊòØÈÉ≠‰∏úÊòéÔºü";
+            var s = "¥Û¡¨¿Ìπ§¥Û—ß–£≥§ «≤ª «π˘∂´√˜£ø";
 
             var tokens = posSeg.Cut(s);
             Console.WriteLine(string.Join("", tokens.Select(token => string.Format("{0}  {1}\n", token.Word, token.Flag))));
 
 
             JiebaSegmenter a = new JiebaSegmenter();
-            a.AddWord("ÊòØ");
+            a.AddWord(" «");
             var extractor = new TfidfExtractor(a);
-            // ÊèêÂèñÂâçÂçÅ‰∏™‰ªÖÂåÖÂê´ÂêçËØçÂíåÂä®ËØçÁöÑÂÖ≥ÈîÆËØç
+            // Ã·»°«∞ Æ∏ˆΩˆ∞¸∫¨√˚¥ ∫Õ∂Ø¥ µƒπÿº¸¥ 
             var keywords = extractor.ExtractTags(str, 10, Constants.NounAndVerbPos);
             Console.WriteLine(string.Join(" ", keywords));*/
             Execute();
-            Console.WriteLine("abc".IndexOf("490560645"));
+            //Console.WriteLine("abc".IndexOf("490560645"));
         }
 
         static void Execute()
@@ -66,7 +78,7 @@ namespace KnowledgeNetwork
 
             Dictionary<string, string> gremlinQueries = new Dictionary<string, string>
             {
-                  { "Êü•ËØ¢",    "g.V('Â§ßËøûÁêÜÂ∑•Â§ßÂ≠¶').outE('Ê†°Èïø').inV()" },
+                  { "",    "g.V('¥Û¡¨¿Ìπ§¥Û—ß')" },
             };
             foreach (KeyValuePair<string, string> i in gremlinQueries)
             {
@@ -99,17 +111,17 @@ namespace KnowledgeNetwork
             Dictionary<string, string> gremlinQueries = new Dictionary<string, string>
             {
                 { "drop vertex",      "g.V().drop()" },
-                { "Ê∑ªÂä†ÈÉ≠‰∏úÊòé",    "g.addV('‰∫∫').property('id', 'ÈÉ≠‰∏úÊòé')" },
-                { "Ê∑ªÂä†zzz",    "g.addV('‰∫∫').property('id', 'zzz').property('Èô¢Â£´', false)" },
-                { "Ê∑ªÂä†Â§ßÂ∑•",    "g.addV('Â≠¶Ê†°').property('id', 'Â§ßËøûÁêÜÂ∑•Â§ßÂ≠¶').property('ÁÆÄÁß∞', 'Â§ßÂ∑•').property('Âª∫Ê†°Êó∂Èó¥', '1949Âπ¥4Êúà').property('211Â∑•Á®ã', true).property('985Â∑•Á®ã', true)"},
-                { "add edge",      "g.V('Â§ßËøûÁêÜÂ∑•Â§ßÂ≠¶').addE('Ê†°Èïø').to(g.V('ÈÉ≠‰∏úÊòé'))" },
-                { "update property", "g.V('ÈÉ≠‰∏úÊòé').property('Èô¢Â£´',true)"},
-                { "output",   "g.V().hasLabel('‰∫∫').values('Èô¢Â£´')" }, //Â∞Ükey‰∏∫Èô¢Â£´ÁöÑÊâÄÊúâvalueËæìÂá∫
-                { "Traverse",       "g.V('Â§ßËøûÁêÜÂ∑•Â§ßÂ≠¶').outE('Ê†°Èïø').inV().hasLabel('‰∫∫')" },
+                { "ÃÌº”π˘∂´√˜",    "g.addV('»À').property('id', 'π˘∂´√˜')" },
+                { "ÃÌº”zzz",    "g.addV('»À').property('id', 'zzz').property('‘∫ ø', false)" },
+                { "ÃÌº”¥Ûπ§",    "g.addV('—ß–£').property('id', '¥Û¡¨¿Ìπ§¥Û—ß').property('ºÚ≥∆', '¥Ûπ§').property('Ω®–£ ±º‰', '1949ƒÍ4‘¬').property('211π§≥Ã', true).property('985π§≥Ã', true)"},
+                { "add edge",      "g.V('¥Û¡¨¿Ìπ§¥Û—ß').addE('–£≥§').to(g.V('π˘∂´√˜'))" },
+                { "update property", "g.V('π˘∂´√˜').property('‘∫ ø',true)"},
+                { "output",   "g.V().hasLabel('»À').values('‘∫ ø')" }, //Ω´keyŒ™‘∫ øµƒÀ˘”–value ‰≥ˆ
+                { "Traverse",       "g.V('¥Û¡¨¿Ìπ§¥Û—ß').outE('–£≥§').inV().hasLabel('»À')" },
                 { "CountVertices",  "g.V().count()" },
                 { "CountEdges",     "g.E().count()" },
                 { "DropVertex",     "g.V('zzz').drop()" },
-                { "Loop",           "g.V('Â§ßËøûÁêÜÂ∑•Â§ßÂ≠¶').repeat(out()).until(has('id', 'ÈÉ≠‰∏úÊòé')).path()" },
+                { "Loop",           "g.V('¥Û¡¨¿Ìπ§¥Û—ß').repeat(out()).until(has('id', 'π˘∂´√˜')).path()" },
                 //{ "Traverse 2x",    "g.V('thomas').outE('knows').inV().hasLabel('person').outE('knows').inV().hasLabel('person')" },
                 //{ "DropEdge",       "g.V('thomas').outE('knows').where(inV().has('id', 'mary')).drop()" },
             };
@@ -134,3 +146,4 @@ namespace KnowledgeNetwork
         }
     }
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
