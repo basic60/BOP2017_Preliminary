@@ -23,18 +23,10 @@ namespace KnowledgeNetwork
     {
         static void Main(string[] args)
         {
-
-
-            string str = "请问学校在哪"; int id = -1;
-            StringBuilder tmp = new StringBuilder();
-            if ((id = str.IndexOf("你们学校")) != -1)
-            {
-
-                tmp.Append(str.Substring(0, id));
-                tmp.Append("大连理工大学");
-                tmp.Append(str.Substring(id + 4));
-            }
-            Console.WriteLine(tmp.ToString());
+            DictionaryTree.LoadDic(@"1.txt");
+            Console.WriteLine(DictionaryTree.GetSynonyms("大工"));
+            Console.WriteLine(DictionaryTree.GetSynonyms("大连"));
+            Console.WriteLine(DictionaryTree.GetSynonyms("开启"));
             /*string str = "大连理工大学校长是不是郭东明？";
 
             var posSeg = new PosSegmenter();
@@ -50,7 +42,7 @@ namespace KnowledgeNetwork
             // 提取前十个仅包含名词和动词的关键词
             var keywords = extractor.ExtractTags(str, 10, Constants.NounAndVerbPos);
             Console.WriteLine(string.Join(" ", keywords));*/
-            Execute();
+            //Execute();
             //Console.WriteLine("abc".IndexOf("490560645"));
         }
 
@@ -78,7 +70,17 @@ namespace KnowledgeNetwork
 
             Dictionary<string, string> gremlinQueries = new Dictionary<string, string>
             {
-                  { "",    "g.V('大连理工大学')" },
+                { "添加地址1",    "g.addV('地点').property('id', '中国·辽宁省大连市甘井子区凌工路2号')" },
+                { "添加地址2",    "g.addV('邮编').property('id', '116024')" },
+                { "添加地址3",    "g.addV('电话').property('id', '0411-84708320')" },
+                { "添加地址4",    "g.addV('邮箱').property('id', 'office@dlut.edu.cn')" },
+                { "添加地址5",    "g.addV('网址').property('id', 'www.dlut.edu.cn')" },
+
+                { "add edge1",   "g.V('大连理工大学').addE('地点').to(g.V('中国·辽宁省大连市甘井子区凌工路2号'))" },
+                { "add edge2",   "g.V('大连理工大学').addE('邮编').to(g.V('116024'))" },
+                { "add edge3",   "g.V('大连理工大学').addE('电话').to(g.V('0411-84708320'))" },
+                { "add edge4",   "g.V('大连理工大学').addE('邮箱').to(g.V('office@dlut.edu.cn'))" },
+                { "add edge5",   "g.V('大连理工大学').addE('网址').to(g.V('www.dlut.edu.cn'))" },
             };
             foreach (KeyValuePair<string, string> i in gremlinQueries)
             {
@@ -86,8 +88,10 @@ namespace KnowledgeNetwork
                 IDocumentQuery<dynamic> query = client.CreateGremlinQuery<dynamic>(graph, i.Value);
                 while (query.HasMoreResults)
                 {
+                    Console.WriteLine("more result");
                     foreach (dynamic result in await query.ExecuteNextAsync())
                     {
+                        Console.WriteLine("more result");
                         Console.WriteLine(result.id);
                         Console.WriteLine($"\t>>>>>>>>>>>>>>>>>>>>>>>>>> {JsonConvert.SerializeObject(result)}\n");
                     }

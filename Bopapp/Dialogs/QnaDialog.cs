@@ -38,13 +38,34 @@ namespace Bopapp.Dialogs
         public virtual async Task AnswerAsync(IDialogContext context, IAwaitable<IMessageActivity> para)
         {
             var message = await para;
-            string question = message.Text,answer="";
+            string question = message.Text;
+
             var posSeg = new PosSegmenter();
             var tokens = posSeg.Cut(question);
+            List<string> words = new List<string>();
+            List<string> chara = new List<string>();
+            foreach (var i in tokens) words.Add(i.Word);
+            foreach (var i in tokens) chara.Add(i.Flag);
+            for(int i = 0; i != words.Count; i++)
+            {
+                string tmp=null;
+                if ((tmp=DictionaryTree.GetSynonyms(words[i])) != null)
+                {
+                    words[i] = tmp;
+                }
+            }
 
-            await context.PostAsync(question);
+            List<string> keyword = new List<string>();
+            for(int i = 0; i != words.Count(); i++)
+            {
+                await context.PostAsync(words[i]+" "+chara[i]);
+                if (chara[i] == "n" || chara[i] == "v")
+                {
+                    keyword.Add(chara[i]);
+                }
+            }
 
-            var extractor = new TfidfExtractor();
+            /*var extractor = new TfidfExtractor();
             IEnumerable<string> keywords = extractor.ExtractTags(question, 10, Constants.NounAndVerbPos);
             if (keywords!=null)
             {
@@ -56,11 +77,28 @@ namespace Bopapp.Dialogs
             else
             {
                 await context.PostAsync("null");
+            }*/
+
+
+            context.Wait(AnswerAsync);
+        }
+
+        public string TryAll(List<string> data)
+        {
+            if (data.Count == 1 && data[0] != "大连理工大学")
+            {
+                data.Add("大连理工大学");
+            }
+            else if(data.Count == 1)
+            {
+                return "请问您有什么问题？";
             }
 
+            if (data.Count == 2)
+            {
 
-            await context.PostAsync(string.Join("", tokens.Select(token => string.Format("{0}  {1}\n", token.Word, token.Flag))));
-            context.Wait(AnswerAsync);
+            }
+            return null;
         }
     }
 }

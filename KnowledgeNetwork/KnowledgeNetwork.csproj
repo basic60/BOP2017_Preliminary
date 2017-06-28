@@ -75,6 +75,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DictionaryTree.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="GraphJson.cs" />
     <Compile Include="main.cs" />

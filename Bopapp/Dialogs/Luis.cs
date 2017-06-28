@@ -25,7 +25,8 @@ namespace Bopapp.Dialogs
     /// <summary>
     /// Luis对话框，语义分析完成后的处理。
     /// </summary>
-    [LuisModel("fdede7ca-c1c3-43ca-b4c7-375ec27aa5e3", "7791146f5ae6432ba902a046e1a76ff9",LuisApiVersion.V2, @"southeastasia.api.cognitive.microsoft.com")]
+    //[LuisModel("fdede7ca-c1c3-43ca-b4c7-375ec27aa5e3", "7791146f5ae6432ba902a046e1a76ff9",LuisApiVersion.V2, @"southeastasia.api.cognitive.microsoft.com")]
+    [LuisModel("fdede7ca-c1c3-43ca-b4c7-375ec27aa5e3", "29a12801d12c45aca9669a8fcb7dc4d1", LuisApiVersion.V2, @"westus.api.cognitive.microsoft.com")]
     [Serializable]
     public class LuisDialog : LuisDialog<object>
     {
@@ -36,7 +37,6 @@ namespace Bopapp.Dialogs
         {
             
         }
-
 
         public LuisDialog(ILuisService service) : base(service)
         {
@@ -149,11 +149,12 @@ namespace Bopapp.Dialogs
         [LuisIntent("查询事物")]
         public async Task QueryThing(IDialogContext context, LuisResult luis_res)
         {
+
             await context.PostAsync("查询事物");
             StringBuilder tmp = new StringBuilder();
             if (luis_res.Entities.Count() == 2)
             {
-                tmp.Append($"g.V('{luis_res.Entities[0]}').outE('{luis_res.Entities[1]}').inV()");
+                tmp.Append($"g.V('{luis_res.Entities[0].Entity}').outE('{luis_res.Entities[1].Entity}').inV()");
             }
             else
             {
@@ -170,12 +171,38 @@ namespace Bopapp.Dialogs
                    new DocumentCollection { Id = "persons" },
                    new RequestOptions { OfferThroughput = 1000 });
 
+
                 IDocumentQuery<dynamic> query_result = client.CreateGremlinQuery<dynamic>(graph, query_str.ToString());
+                bool flag = false;
                 while (query_result.HasMoreResults)
                 {
                     foreach (dynamic i in await query_result.ExecuteNextAsync())
                     {
+                        flag = true;
                         await context.PostAsync(i.id);
+                    }
+                }
+                if(flag==false)   
+                {
+                    tmp.Clear();
+                    tmp.Append($"g.V('{luis_res.Entities[1].Entity}').outE('{luis_res.Entities[0].Entity}').inV()");
+                    query_str = tmp.ToString();
+                  //  await context.PostAsync(query_str);
+                    query_result = client.CreateGremlinQuery<dynamic>(graph, query_str.ToString());
+                    if (query_result.HasMoreResults)
+                    {
+                        while (query_result.HasMoreResults)
+                        {
+                            foreach (dynamic i in await query_result.ExecuteNextAsync())
+                            {
+                                string str = i.id;
+                                await context.PostAsync(str);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        await context.PostAsync("没有相关信息。");
                     }
                 }
             }
