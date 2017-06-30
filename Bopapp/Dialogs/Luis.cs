@@ -35,7 +35,6 @@ namespace Bopapp.Dialogs
 
         public LuisDialog()
         {
-            
         }
 
         public LuisDialog(ILuisService service) : base(service)
@@ -171,7 +170,6 @@ namespace Bopapp.Dialogs
                    new DocumentCollection { Id = "persons" },
                    new RequestOptions { OfferThroughput = 1000 });
 
-
                 IDocumentQuery<dynamic> query_result = client.CreateGremlinQuery<dynamic>(graph, query_str.ToString());
                 bool flag = false;
                 while (query_result.HasMoreResults)
@@ -227,4 +225,5 @@ namespace Bopapp.Dialogs
         }
         #endregion
     }
+
 }

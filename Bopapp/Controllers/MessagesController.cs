@@ -28,7 +28,7 @@ namespace Bopapp
                 //  await Conversation.SendAsync(activity, () => new EchoDialog());                
                 // await Conversation.SendAsync(activity, () => new LuisDialog());
                 DictionaryTree.LoadDic(HttpContext.Current.Request.PhysicalApplicationPath + "\\" + "Synonymous.txt");
-                await Conversation.SendAsync(activity, () => new QnaDialog());
+                await Conversation.SendAsync(activity, () => new FinDialog());
             }
             else
             {

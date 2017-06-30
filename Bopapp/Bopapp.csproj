@@ -285,7 +285,7 @@
     <Compile Include="Dialogs\DictionaryTree.cs" />
     <Compile Include="Dialogs\EchoDialog.cs" />
     <Compile Include="Dialogs\Luis.cs" />
-    <Compile Include="Dialogs\QnaDialog.cs" />
+    <Compile Include="Dialogs\FinDialog.cs" />
     <Compile Include="Dialogs\qnamaker.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

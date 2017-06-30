@@ -23,28 +23,33 @@ namespace KnowledgeNetwork
     {
         static void Main(string[] args)
         {
-            DictionaryTree.LoadDic(@"1.txt");
-            Console.WriteLine(DictionaryTree.GetSynonyms("大工"));
-            Console.WriteLine(DictionaryTree.GetSynonyms("大连"));
-            Console.WriteLine(DictionaryTree.GetSynonyms("开启"));
-            /*string str = "大连理工大学校长是不是郭东明？";
 
-            var posSeg = new PosSegmenter();
-            var s = "大连理工大学校长是不是郭东明？";
+            List<string> unuseful_word = new List<string> { "是","sdfsd" };
+            List<string> words = new List<string>();
+            words.Add("是");int a = 1;
+            if ((a==1 || a==2) && (!unuseful_word.Contains(words[0])))
+            {
+                Console.WriteLine("error!!!!!!!!!");
+            }
 
-            var tokens = posSeg.Cut(s);
-            Console.WriteLine(string.Join("", tokens.Select(token => string.Format("{0}  {1}\n", token.Word, token.Flag))));
+        /*string str = "大连理工大学校长是不是郭东明？";
+
+        var posSeg = new PosSegmenter();
+        var s = "大连理工大学校长是不是郭东明？";
+
+        var tokens = posSeg.Cut(s);
+        Console.WriteLine(string.Join("", tokens.Select(token => string.Format("{0}  {1}\n", token.Word, token.Flag))));
 
 
-            JiebaSegmenter a = new JiebaSegmenter();
-            a.AddWord("是");
-            var extractor = new TfidfExtractor(a);
-            // 提取前十个仅包含名词和动词的关键词
-            var keywords = extractor.ExtractTags(str, 10, Constants.NounAndVerbPos);
-            Console.WriteLine(string.Join(" ", keywords));*/
-            //Execute();
-            //Console.WriteLine("abc".IndexOf("490560645"));
-        }
+        JiebaSegmenter a = new JiebaSegmenter();
+        a.AddWord("是");
+        var extractor = new TfidfExtractor(a);
+        // 提取前十个仅包含名词和动词的关键词
+        var keywords = extractor.ExtractTags(str, 10, Constants.NounAndVerbPos);
+        Console.WriteLine(string.Join(" ", keywords));*/
+        Execute();
+        //Console.WriteLine("abc".IndexOf("490560645"));
+    }
 
         static void Execute()
         {
@@ -70,7 +75,8 @@ namespace KnowledgeNetwork
 
             Dictionary<string, string> gremlinQueries = new Dictionary<string, string>
             {
-                { "添加地址1",    "g.addV('地点').property('id', '中国·辽宁省大连市甘井子区凌工路2号')" },
+                { "asd","g.V('大连理工大学')"},
+              /*  { "添加地址1",    "g.addV('地点').property('id', '中国·辽宁省大连市甘井子区凌工路2号')" },
                 { "添加地址2",    "g.addV('邮编').property('id', '116024')" },
                 { "添加地址3",    "g.addV('电话').property('id', '0411-84708320')" },
                 { "添加地址4",    "g.addV('邮箱').property('id', 'office@dlut.edu.cn')" },
@@ -80,7 +86,7 @@ namespace KnowledgeNetwork
                 { "add edge2",   "g.V('大连理工大学').addE('邮编').to(g.V('116024'))" },
                 { "add edge3",   "g.V('大连理工大学').addE('电话').to(g.V('0411-84708320'))" },
                 { "add edge4",   "g.V('大连理工大学').addE('邮箱').to(g.V('office@dlut.edu.cn'))" },
-                { "add edge5",   "g.V('大连理工大学').addE('网址').to(g.V('www.dlut.edu.cn'))" },
+                { "add edge5",   "g.V('大连理工大学').addE('网址').to(g.V('www.dlut.edu.cn'))" },*/
             };
             foreach (KeyValuePair<string, string> i in gremlinQueries)
             {
@@ -91,9 +97,11 @@ namespace KnowledgeNetwork
                     Console.WriteLine("more result");
                     foreach (dynamic result in await query.ExecuteNextAsync())
                     {
-                        Console.WriteLine("more result");
-                        Console.WriteLine(result.id);
                         Console.WriteLine($"\t>>>>>>>>>>>>>>>>>>>>>>>>>> {JsonConvert.SerializeObject(result)}\n");
+
+                        // Console.WriteLine(result.properties.ToString());
+                        if(result.properties["12312312"]!=null)
+                            Console.WriteLine(result.properties["234234"][0].value);
                     }
                 }
                 Console.WriteLine("========================================================");
