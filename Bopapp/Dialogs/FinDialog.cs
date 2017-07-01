@@ -30,8 +30,10 @@ namespace Bopapp.Dialogs
     [Serializable]
     public class FinDialog : IDialog<object>
     {
+
         string endpoint = ConfigurationManager.AppSettings["Endpoint"];
         string authKey = ConfigurationManager.AppSettings["AuthKey"];
+
 
         public readonly List<string> unuseful_word =new List<string>{"是"};
 
@@ -44,8 +46,9 @@ namespace Bopapp.Dialogs
         {
             var message = await para;
             string question = message.Text;
-
+ 
             var posSeg = new PosSegmenter();
+            
             var tokens = posSeg.Cut(question);
             List<string> words = new List<string>();
             List<string> chara = new List<string>();
@@ -63,9 +66,15 @@ namespace Bopapp.Dialogs
             List<string> keyword = new List<string>();
             for(int i = 0; i != words.Count(); i++)
             {
-                if ( (chara[i] == "n" || chara[i] == "v") && (!unuseful_word.Contains(words[i]))  )
+                if ( (chara[i] == "n" || chara[i] == "v" || chara[i] == "nt") && (!unuseful_word.Contains(words[i]))  )
                 {
+                    await context.PostAsync("keyword: "+words[i]);
                     keyword.Add(words[i]);
+                }
+                if (chara[i] == "nr" && i - 1 >= 0 && chara[i - 1] == "nr")
+                {
+                    await context.PostAsync(words[i - 1] + words[i]);
+                    keyword.Add(words[i - 1] + words[i]);
                 }
             }
 
@@ -87,7 +96,10 @@ namespace Bopapp.Dialogs
 
             if (data.Count == 2)
             {
+                
                 string ret = await query2(data[0], data[1], question);
+                if (ret == "True") return "是";
+                if (ret == "False") return "否";
                 return ret;
             }
             else
@@ -98,9 +110,15 @@ namespace Bopapp.Dialogs
                         string res = await query2(data[i], data[j], question);
                         if (res!= "没有相关信息。"&&res!=null)
                         {
-                            if ((question.IndexOf("是不是")!=-1||question.IndexOf("是否")!=-1)&&data.Contains(res))
+                            if ((question.IndexOf("是不是") != -1 || question.IndexOf("是否") != -1) && data.Contains(res))
                             {
                                 return "是";
+                            }
+                            else
+                            {
+                                if (res == "True") return "是";
+                                if (res == "False") return "否";
+                                return res;
                             }
                         }
                     }
@@ -108,17 +126,18 @@ namespace Bopapp.Dialogs
             return "没有相关信息。";
         }
 
+
         public async Task<string> query2(string data0,string data1,string question)
         {
             using (DocumentClient client = new DocumentClient(new Uri(endpoint), authKey,
                       new ConnectionPolicy { ConnectionMode = ConnectionMode.Direct, ConnectionProtocol = Protocol.Tcp }))
             {
-                DocumentCollection graph = await client.CreateDocumentCollectionIfNotExistsAsync(
+                     DocumentCollection graph = await client.CreateDocumentCollectionIfNotExistsAsync(
                      UriFactory.CreateDatabaseUri("graphdb_dut"),
                      new DocumentCollection { Id = "persons" },
                      new RequestOptions { OfferThroughput = 1000 });
 
-
+               
                 StringBuilder query_str = new StringBuilder();
                 query_str.Append($"g.V('{data0}').outE('{data1}').inV()");
                 IDocumentQuery<dynamic> query_result = client.CreateGremlinQuery<dynamic>(graph, query_str.ToString());
@@ -144,8 +163,8 @@ namespace Bopapp.Dialogs
                 while (query_result.HasMoreResults)
                 {
                     foreach (dynamic i in await query_result.ExecuteNextAsync())
-                        if (i.ContainsKey(data1))
-                            return "是";
+                        if (i.properties[data1]!=null)
+                            return i.properties[data1][0].value;
                 }
 
                 query_str.Append($"g.V('{data1}')");
@@ -154,18 +173,11 @@ namespace Bopapp.Dialogs
                 while (query_result.HasMoreResults)
                 {
                     foreach (dynamic i in await query_result.ExecuteNextAsync())
-                        if (i.ContainsKey(data0))
-                            return "是";
+                        if (i.properties[data0] != null)
+                            return i.properties[data1][0].value;
                 }
 
-                if (question.IndexOf("是不是") != -1 || question.IndexOf("是否") != -1)
-                {
-                    return "否";
-                }
-                else
-                {
-                    return "没有相关信息。";
-                }
+                return "没有相关信息。";
             }
         }
     }

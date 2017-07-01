@@ -9,6 +9,7 @@ using Bopapp.Dialogs;
 using System;
 using System.Text;
 using System.Web;
+using JiebaNet.Segmenter;
 
 namespace Bopapp
 {

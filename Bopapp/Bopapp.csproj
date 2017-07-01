@@ -275,6 +275,7 @@
     <Content Include="Synonymous.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="userdic.txt" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
