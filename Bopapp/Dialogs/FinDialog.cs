@@ -27,15 +27,28 @@ using System.IO;
 
 namespace Bopapp.Dialogs
 {
+    public static class DialogContext
+    {
+        static string context;
+        public static void clear()
+        {
+            context = null;
+        }
+
+        public static void update(string s) => context = s;
+
+        public static string peek() => context;
+        static DialogContext() { context = null; }
+    }
+
     [Serializable]
     public class FinDialog : IDialog<object>
     {
-
         string endpoint = ConfigurationManager.AppSettings["Endpoint"];
         string authKey = ConfigurationManager.AppSettings["AuthKey"];
 
 
-        public readonly List<string> unuseful_word =new List<string>{"是"};
+        public readonly List<string> unuseful_word =new List<string>{"是","有"};
 
         public async Task StartAsync(IDialogContext context)
         {
@@ -44,9 +57,16 @@ namespace Bopapp.Dialogs
 
         public virtual async Task AnswerAsync(IDialogContext context, IAwaitable<IMessageActivity> para)
         {
+
             var message = await para;
-            string question = message.Text;
- 
+            string question = message.Text.Replace(" ","");
+            question = message.Text.Replace("你们学校", "大连理工大学");
+            question = message.Text.Replace("你们", "大连理工大学");
+
+
+
+
+
             var posSeg = new PosSegmenter();
             
             var tokens = posSeg.Cut(question);
@@ -64,60 +84,134 @@ namespace Bopapp.Dialogs
             }
 
             List<string> keyword = new List<string>();
-            for(int i = 0; i != words.Count(); i++)
+
+
+            if (DialogContext.peek() != null)
             {
-                if ( (chara[i] == "n" || chara[i] == "v" || chara[i] == "nt") && (!unuseful_word.Contains(words[i]))  )
+                keyword.Add(DialogContext.peek());
+                DialogContext.clear();
+            }
+
+            for (int i = 0; i != words.Count(); i++)
+            {
+                if ( (chara[i] == "n" || chara[i] == "v" || chara[i] == "nt" || chara[i]=="nz") && (!unuseful_word.Contains(words[i]))  )
                 {
                     await context.PostAsync("keyword: "+words[i]);
                     keyword.Add(words[i]);
                 }
                 if (chara[i] == "nr" && i - 1 >= 0 && chara[i - 1] == "nr")
                 {
-                    await context.PostAsync(words[i - 1] + words[i]);
+                    await context.PostAsync("keyword:"+words[i - 1] + words[i]);
                     keyword.Add(words[i - 1] + words[i]);
+                }
+                if (chara[i] == "nr")
+                {
+                    await context.PostAsync("keyword:"+words[i]);
+                    keyword.Add(words[i]);
                 }
             }
 
+            if (keyword.Count() <= 1)
+            {
+                await context.PostAsync("请更加具体的描述您的问题。");
+                context.Wait(AnswerAsync);
+                return;
+            }
+
+            bool newres = false;string stmp=null;string r1 = null;string r2=null;
+            do
+            {
+                for (int i = 0; i != keyword.Count(); i++)
+                {
+                    for (int j = i + 1; j != keyword.Count(); j++)
+                    {
+                        if((stmp=Cache.query(keyword[i],keyword[j]))!=null)
+                        {
+                            r1 = keyword[i];r2 = keyword[j];
+                            newres = true;
+                            break;
+                        }
+                    }
+                    if (newres)
+                        break;
+                }
+                if (newres)
+                {
+                    await context.PostAsync("removing " + r1);
+                    await context.PostAsync("removing " + r2);
+                    await context.PostAsync("adding " + stmp);
+                    keyword.Remove(r1);keyword.Remove(r2);
+                    keyword.Add(stmp);
+                    newres = false;
+                }
+                if (keyword.Count() == 1)
+                {
+                    await context.PostAsync(keyword[0]);
+                    DialogContext.update(keyword[0]);
+                    context.Wait(AnswerAsync);
+                    return;
+                }
+            } while (newres == true);
+
+
+            for (int i = 0; i != keyword.Count(); i++)
+                for (int j = i + 1; j != keyword.Count(); j++)
+                {
+                    if (keyword[i] == keyword[j] && (question.IndexOf("是不是") != -1 || question.IndexOf("是否") != -1 || (question.IndexOf("是") != -1 && question.IndexOf("吗") != -1)))
+                    {
+                        await context.PostAsync("是");
+                        DialogContext.update("是");
+                        context.Wait(AnswerAsync);
+                        return;
+                    }
+                }
+
+
             string ans = await TryAll(keyword, question);
+            if (ans == "没有相关信息。" && stmp != null)
+                ans = stmp;
+
             await context.PostAsync(ans);
+            DialogContext.update(ans);
             context.Wait(AnswerAsync);
         }
 
         public async Task<string> TryAll(List<string> data,string question)
         {
-            if (data.Count == 1 && data[0] != "大连理工大学")
+            if(data.Count == 1)
             {
-                data.Add("大连理工大学");
-            }
-            else if(data.Count == 1)
-            {
-                return "请问您有什么问题？";
+                return "请更加具体的描述您的问题。";
             }
 
             if (data.Count == 2)
             {
-                
                 string ret = await query2(data[0], data[1], question);
-                if (ret == "True") return "是";
-                if (ret == "False") return "否";
+                if (ret == "True"||ret=="true") return "是";
+                if (ret == "False"||ret=="false") return "否";
+
+                DialogContext.update(ret);
                 return ret;
             }
             else
             {
                 for (int i = 0; i < data.Count; i++)
-                    for (int j = i + 1; j < data.Count; j++)
+                    for (int j = 0; j < data.Count; j++)
                     {
+                        if (i == j)
+                            continue;
                         string res = await query2(data[i], data[j], question);
                         if (res!= "没有相关信息。"&&res!=null)
                         {
-                            if ((question.IndexOf("是不是") != -1 || question.IndexOf("是否") != -1) && data.Contains(res))
+                            if ((question.IndexOf("是不是") != -1 || question.IndexOf("是否") != -1 || (question.IndexOf("是")!=-1&&question.IndexOf("吗")!=-1)) && data.Contains(res))
                             {
+                                DialogContext.update("是");
                                 return "是";
                             }
                             else
                             {
-                                if (res == "True") return "是";
-                                if (res == "False") return "否";
+                                if (res == "True" || res=="true") return "是";
+                                if (res == "False" || res=="false") return "否";
+                                DialogContext.update(res);
                                 return res;
                             }
                         }
@@ -125,7 +219,6 @@ namespace Bopapp.Dialogs
             }
             return "没有相关信息。";
         }
-
 
         public async Task<string> query2(string data0,string data1,string question)
         {
@@ -176,7 +269,6 @@ namespace Bopapp.Dialogs
                         if (i.properties[data0] != null)
                             return i.properties[data1][0].value;
                 }
-
                 return "没有相关信息。";
             }
         }

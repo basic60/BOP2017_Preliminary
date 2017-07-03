@@ -25,14 +25,11 @@ namespace KnowledgeNetwork
         {
             var posSeg = new PosSegmenter();
            
-            var s ="大连理工大学位于哪里？";
+            var s = "正高职人员？";
 
             var tokens = posSeg.Cut(s);
             Console.WriteLine(string.Join("", tokens.Select(token => string.Format("{0}  {1}\n", token.Word, token.Flag))));
-
-
             Execute();
-        //Console.WriteLine("abc".IndexOf("490560645"));
     }
 
         static void Execute()
@@ -45,8 +42,9 @@ namespace KnowledgeNetwork
                 authKey,
                 new ConnectionPolicy { ConnectionMode = ConnectionMode.Direct, ConnectionProtocol = Protocol.Tcp }))
             {
-                main p = new main();
-                p.Query(client).Wait();
+                    main p = new main();
+                    p.Query(client).Wait();
+
             }
         }
 
@@ -59,19 +57,15 @@ namespace KnowledgeNetwork
 
             Dictionary<string, string> gremlinQueries = new Dictionary<string, string>
             {
-                { "asd","g.V('郭东明')"},
-              /*  { "添加地址1",    "g.addV('地点').property('id', '中国·辽宁省大连市甘井子区凌工路2号')" },
-                { "添加地址2",    "g.addV('邮编').property('id', '116024')" },
-                { "添加地址3",    "g.addV('电话').property('id', '0411-84708320')" },
-                { "添加地址4",    "g.addV('邮箱').property('id', 'office@dlut.edu.cn')" },
-                { "添加地址5",    "g.addV('网址').property('id', 'www.dlut.edu.cn')" },
+{"1","g.addV('人').property('id','欧进萍')"},
+{"2","g.addV('人').property('id','程耿东')"},
+{"3","g.addV('人').property('id','张德祥')"},
+{"4","g.V('申长雨').addE('上一任').to(g.V('欧进萍'))"},
+{"5","g.V('欧进萍').addE('上一任').to(g.V('程耿东'))"},
+{"6","g.V('魏小鹏').addE('上一任').to(g.V('张德祥'))"},
 
-                { "add edge1",   "g.V('大连理工大学').addE('地点').to(g.V('中国·辽宁省大连市甘井子区凌工路2号'))" },
-                { "add edge2",   "g.V('大连理工大学').addE('邮编').to(g.V('116024'))" },
-                { "add edge3",   "g.V('大连理工大学').addE('电话').to(g.V('0411-84708320'))" },
-                { "add edge4",   "g.V('大连理工大学').addE('邮箱').to(g.V('office@dlut.edu.cn'))" },
-                { "add edge5",   "g.V('大连理工大学').addE('网址').to(g.V('www.dlut.edu.cn'))" },*/
             };
+            
             foreach (KeyValuePair<string, string> i in gremlinQueries)
             {
                 Console.WriteLine($">>Running {i.Key} : {i.Value}");
@@ -82,10 +76,6 @@ namespace KnowledgeNetwork
                     foreach (dynamic result in await query.ExecuteNextAsync())
                     {
                         Console.WriteLine($"\t>>>>>>>>>>>>>>>>>>>>>>>>>> {JsonConvert.SerializeObject(result)}\n");
-
-                        // Console.WriteLine(result.properties.ToString());
-                        if(result.properties["12312312"]!=null)
-                            Console.WriteLine(result.properties["234234"][0].value);
                     }
                 }
                 Console.WriteLine("========================================================");
