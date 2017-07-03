@@ -23,7 +23,8 @@ using System.Web.Http;
 using System.Text;
 using Microsoft.Azure.Graphs.Elements;
 using System.IO;
-
+using System.Web;
+using System.Net.Http.Headers;
 
 namespace Bopapp.Dialogs
 {
@@ -49,6 +50,8 @@ namespace Bopapp.Dialogs
 
 
         public readonly List<string> unuseful_word =new List<string>{"是","有"};
+        public readonly List<string> qlocation_word = new List<string> {"在哪里","在哪儿","在哪" };
+
 
         public async Task StartAsync(IDialogContext context)
         {
@@ -62,10 +65,6 @@ namespace Bopapp.Dialogs
             string question = message.Text.Replace(" ","");
             question = message.Text.Replace("你们学校", "大连理工大学");
             question = message.Text.Replace("你们", "大连理工大学");
-
-
-
-
 
             var posSeg = new PosSegmenter();
             
@@ -85,12 +84,17 @@ namespace Bopapp.Dialogs
 
             List<string> keyword = new List<string>();
 
-
             if (DialogContext.peek() != null)
             {
                 keyword.Add(DialogContext.peek());
                 DialogContext.clear();
             }
+
+            foreach(var i in qlocation_word)
+                if (question.IndexOf(i) != -1 && !keyword.Contains("位于"))
+                {
+                    keyword.Add("位于");
+                }
 
             for (int i = 0; i != words.Count(); i++)
             {
@@ -217,6 +221,14 @@ namespace Bopapp.Dialogs
                         }
                     }
             }
+
+
+            if ((question.IndexOf("是不是") != -1 || question.IndexOf("是否") != -1 || (question.IndexOf("是") != -1 && question.IndexOf("吗") != -1)))
+            {
+                DialogContext.update("否");
+                return "否";
+            }
+            
             return "没有相关信息。";
         }
 
@@ -269,8 +281,11 @@ namespace Bopapp.Dialogs
                         if (i.properties[data0] != null)
                             return i.properties[data1][0].value;
                 }
+                
                 return "没有相关信息。";
             }
         }
+
+
     }
 }

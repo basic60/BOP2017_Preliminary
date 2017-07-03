@@ -30,6 +30,7 @@ namespace Bopapp
                 // await Conversation.SendAsync(activity, () => new LuisDialog());
                 DictionaryTree.LoadDic(HttpContext.Current.Request.PhysicalApplicationPath + "\\" + "Synonymous.txt");
                 Cache.LoadCache(HttpContext.Current.Request.PhysicalApplicationPath + "\\" + "cache.txt");
+
                 await Conversation.SendAsync(activity, () => new FinDialog());
             }
             else

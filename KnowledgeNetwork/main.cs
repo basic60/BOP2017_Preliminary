@@ -25,11 +25,11 @@ namespace KnowledgeNetwork
         {
             var posSeg = new PosSegmenter();
            
-            var s = "正高职人员？";
+            var s = "大工在哪里？";
 
             var tokens = posSeg.Cut(s);
             Console.WriteLine(string.Join("", tokens.Select(token => string.Format("{0}  {1}\n", token.Word, token.Flag))));
-            Execute();
+          //  Execute();
     }
 
         static void Execute()
