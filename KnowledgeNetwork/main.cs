@@ -23,13 +23,20 @@ namespace KnowledgeNetwork
     {
         static void Main(string[] args)
         {
+            List<string> a = new List<string>();
+            a.Add("123");a.Add("123");
+            Console.WriteLine(a.Count());
+            a.Remove("123");
+            Console.WriteLine(a.Count());
+
+
             var posSeg = new PosSegmenter();
            
-            var s = "大工在哪里？";
+            var s = "我的办公地点在哪";
 
             var tokens = posSeg.Cut(s);
             Console.WriteLine(string.Join("", tokens.Select(token => string.Format("{0}  {1}\n", token.Word, token.Flag))));
-          //  Execute();
+           Execute();
     }
 
         static void Execute()
@@ -57,13 +64,12 @@ namespace KnowledgeNetwork
 
             Dictionary<string, string> gremlinQueries = new Dictionary<string, string>
             {
-{"1","g.addV('人').property('id','欧进萍')"},
-{"2","g.addV('人').property('id','程耿东')"},
-{"3","g.addV('人').property('id','张德祥')"},
-{"4","g.V('申长雨').addE('上一任').to(g.V('欧进萍'))"},
-{"5","g.V('欧进萍').addE('上一任').to(g.V('程耿东'))"},
-{"6","g.V('魏小鹏').addE('上一任').to(g.V('张德祥'))"},
-
+{"1","g.addV('学院').property('id','大连理工大学白俄罗斯国立大学联合学院')"},
+{"2","g.V('大连理工大学白俄罗斯国立大学联合学院').property('创建','2017年4月10日')"},
+{"3","g.V('大连理工大学白俄罗斯国立大学联合学院').property('电话','0411-84706615')"},
+{"4","g.V('大连理工大学白俄罗斯国立大学联合学院').property('邮箱','dbji@dlut.edu.cn')"},
+{"5","g.addV('学院').property('id','国际教育学院')"},
+{"6","g.V('国际教育学院').property('创建','2013年3月8日')"},
             };
             
             foreach (KeyValuePair<string, string> i in gremlinQueries)
@@ -96,20 +102,7 @@ namespace KnowledgeNetwork
                 new RequestOptions { OfferThroughput = 1000 });
             Dictionary<string, string> gremlinQueries = new Dictionary<string, string>
             {
-                { "drop vertex",      "g.V().drop()" },
-                { "添加郭东明",    "g.addV('人').property('id', '郭东明')" },
-                { "添加zzz",    "g.addV('人').property('id', 'zzz').property('院士', false)" },
-                { "添加大工",    "g.addV('学校').property('id', '大连理工大学').property('简称', '大工').property('建校时间', '1949年4月').property('211工程', true).property('985工程', true)"},
-                { "add edge",      "g.V('大连理工大学').addE('校长').to(g.V('郭东明'))" },
-                { "update property", "g.V('郭东明').property('院士',true)"},
-                { "output",   "g.V().hasLabel('人').values('院士')" }, //将key为院士的所有value输出
-                { "Traverse",       "g.V('大连理工大学').outE('校长').inV().hasLabel('人')" },
-                { "CountVertices",  "g.V().count()" },
-                { "CountEdges",     "g.E().count()" },
-                { "DropVertex",     "g.V('zzz').drop()" },
-                { "Loop",           "g.V('大连理工大学').repeat(out()).until(has('id', '郭东明')).path()" },
-                //{ "Traverse 2x",    "g.V('thomas').outE('knows').inV().hasLabel('person').outE('knows').inV().hasLabel('person')" },
-                //{ "DropEdge",       "g.V('thomas').outE('knows').where(inV().has('id', 'mary')).drop()" },
+
             };
 
             foreach(KeyValuePair<string,string> i in gremlinQueries)

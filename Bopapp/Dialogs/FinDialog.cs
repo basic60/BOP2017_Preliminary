@@ -65,6 +65,8 @@ namespace Bopapp.Dialogs
             string question = message.Text.Replace(" ","");
             question = message.Text.Replace("你们学校", "大连理工大学");
             question = message.Text.Replace("你们", "大连理工大学");
+            question = message.Text.Replace("我们学校", "大连理工大学");
+            question = message.Text.Replace("我们", "大连理工大学");
 
             var posSeg = new PosSegmenter();
             
@@ -84,51 +86,59 @@ namespace Bopapp.Dialogs
 
             List<string> keyword = new List<string>();
 
+            //添加上下文
             if (DialogContext.peek() != null)
             {
                 keyword.Add(DialogContext.peek());
                 DialogContext.clear();
             }
 
-            foreach(var i in qlocation_word)
+            foreach (var i in qlocation_word)
                 if (question.IndexOf(i) != -1 && !keyword.Contains("位于"))
                 {
                     keyword.Add("位于");
                 }
 
+            #region 分词
             for (int i = 0; i != words.Count(); i++)
             {
-                if ( (chara[i] == "n" || chara[i] == "v" || chara[i] == "nt" || chara[i]=="nz") && (!unuseful_word.Contains(words[i]))  )
+                if ((chara[i] == "n" || chara[i] == "v" || chara[i] == "nt" || chara[i] == "nz" || chara[i] == "ns") && (!unuseful_word.Contains(words[i])))
                 {
-                    await context.PostAsync("keyword: "+words[i]);
+                    await context.PostAsync("keyword: " + words[i]);
                     keyword.Add(words[i]);
                 }
                 if (chara[i] == "nr" && i - 1 >= 0 && chara[i - 1] == "nr")
                 {
-                    await context.PostAsync("keyword:"+words[i - 1] + words[i]);
+                    await context.PostAsync("keyword:" + words[i - 1] + words[i]);
                     keyword.Add(words[i - 1] + words[i]);
                 }
                 if (chara[i] == "nr")
                 {
-                    await context.PostAsync("keyword:"+words[i]);
+                    await context.PostAsync("keyword:" + words[i]);
                     keyword.Add(words[i]);
                 }
             }
+            #endregion
+
 
             if (keyword.Count() <= 1)
             {
-                await context.PostAsync("请更加具体的描述您的问题。");
+                await context.PostAsync("请更加具体地描述您的问题。");
                 context.Wait(AnswerAsync);
                 return;
             }
 
-            bool newres = false;string stmp=null;string r1 = null;string r2=null;
+            //缓存消减多参数。
+            bool newres = false;string stmp=null;string finstr=null; string r1 = null;string r2=null;
             do
             {
+                newres = false;
                 for (int i = 0; i != keyword.Count(); i++)
                 {
-                    for (int j = i + 1; j != keyword.Count(); j++)
+                    for (int j = 0; j != keyword.Count(); j++)
                     {
+                        if (i == j)
+                            continue;
                         if((stmp=Cache.query(keyword[i],keyword[j]))!=null)
                         {
                             r1 = keyword[i];r2 = keyword[j];
@@ -139,15 +149,18 @@ namespace Bopapp.Dialogs
                     if (newres)
                         break;
                 }
+
                 if (newres)
                 {
                     await context.PostAsync("removing " + r1);
                     await context.PostAsync("removing " + r2);
                     await context.PostAsync("adding " + stmp);
+                    finstr = stmp;
                     keyword.Remove(r1);keyword.Remove(r2);
                     keyword.Add(stmp);
-                    newres = false;
                 }
+
+                await context.PostAsync("keysize: " + keyword.Count());
                 if (keyword.Count() == 1)
                 {
                     await context.PostAsync(keyword[0]);
@@ -155,28 +168,36 @@ namespace Bopapp.Dialogs
                     context.Wait(AnswerAsync);
                     return;
                 }
+                await context.PostAsync(newres.ToString());
             } while (newres == true);
 
-
-            for (int i = 0; i != keyword.Count(); i++)
-                for (int j = i + 1; j != keyword.Count(); j++)
-                {
-                    if (keyword[i] == keyword[j] && (question.IndexOf("是不是") != -1 || question.IndexOf("是否") != -1 || (question.IndexOf("是") != -1 && question.IndexOf("吗") != -1)))
+            bool ynflag = false;
+            if ((question.IndexOf("是不是") != -1 || question.IndexOf("是否") != -1 || question.IndexOf("对不对") != -1||(question.IndexOf("是") != -1 && question.IndexOf("吗") != -1)))
+            {
+                ynflag = true;
+                for (int i = 0; i != keyword.Count(); i++)
+                    for (int j = i + 1; j != keyword.Count(); j++)
                     {
-                        await context.PostAsync("是");
-                        DialogContext.update("是");
-                        context.Wait(AnswerAsync);
-                        return;
+                        if (keyword[i] == keyword[j])
+                        {
+                            await context.PostAsync("是");
+                            context.Wait(AnswerAsync);
+                            return;
+                        }
                     }
-                }
-
+            }
 
             string ans = await TryAll(keyword, question);
-            if (ans == "没有相关信息。" && stmp != null)
-                ans = stmp;
+            if(ans!= "是" && ynflag == true)
+            {
+                ans = "否";
+            }
+            else if (ans == "没有相关信息。" && finstr != null)
+                ans = finstr;
 
             await context.PostAsync(ans);
-            DialogContext.update(ans);
+            if(ans!="是"&&ans!="否")
+                DialogContext.update(ans);
             context.Wait(AnswerAsync);
         }
 
@@ -206,9 +227,8 @@ namespace Bopapp.Dialogs
                         string res = await query2(data[i], data[j], question);
                         if (res!= "没有相关信息。"&&res!=null)
                         {
-                            if ((question.IndexOf("是不是") != -1 || question.IndexOf("是否") != -1 || (question.IndexOf("是")!=-1&&question.IndexOf("吗")!=-1)) && data.Contains(res))
+                            if ((question.IndexOf("是不是") != -1 || question.IndexOf("是否") != -1 || question.IndexOf("对不对") != -1 || (question.IndexOf("是")!=-1&&question.IndexOf("吗")!=-1)) && data.Contains(res))
                             {
-                                DialogContext.update("是");
                                 return "是";
                             }
                             else
@@ -223,9 +243,8 @@ namespace Bopapp.Dialogs
             }
 
 
-            if ((question.IndexOf("是不是") != -1 || question.IndexOf("是否") != -1 || (question.IndexOf("是") != -1 && question.IndexOf("吗") != -1)))
+            if ((question.IndexOf("是不是") != -1 || question.IndexOf("是否") != -1 || question.IndexOf("对不对") != -1 || (question.IndexOf("是") != -1 && question.IndexOf("吗") != -1)))
             {
-                DialogContext.update("否");
                 return "否";
             }
             
