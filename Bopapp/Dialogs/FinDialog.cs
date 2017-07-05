@@ -63,10 +63,32 @@ namespace Bopapp.Dialogs
 
             var message = await para;
             string question = message.Text.Replace(" ","");
-            question = message.Text.Replace("你们学校", "大连理工大学");
-            question = message.Text.Replace("你们", "大连理工大学");
-            question = message.Text.Replace("我们学校", "大连理工大学");
-            question = message.Text.Replace("我们", "大连理工大学");
+            if(question=="hi!"|| question == "hi"|| question=="你好"||question=="你好！"|| question == "你好。")
+            {
+                await context.PostAsync("你好，请问你有什么问题？");
+                context.Wait(AnswerAsync);
+                return;
+            }
+            if (message.Text.IndexOf("你们学校") != -1)
+            {
+                question = message.Text.Replace("你们学校", "大连理工大学");
+                message.Text = question;
+            }
+            if (message.Text.IndexOf("你们") != -1)
+            {
+                question = message.Text.Replace("你们", "大连理工大学");
+                message.Text = question;
+            }
+            if (message.Text.IndexOf("我们学校") != -1)
+            {
+                question = message.Text.Replace("我们学校", "大连理工大学");
+                message.Text = question;
+            }
+            if (message.Text.IndexOf("我们") != -1)
+            {
+                question = message.Text.Replace("我们", "大连理工大学");
+                message.Text = question;
+            }
 
             var posSeg = new PosSegmenter();
             
@@ -104,17 +126,17 @@ namespace Bopapp.Dialogs
             {
                 if ((chara[i] == "n" || chara[i] == "v" || chara[i] == "nt" || chara[i] == "nz" || chara[i] == "ns") && (!unuseful_word.Contains(words[i])))
                 {
-                    await context.PostAsync("keyword: " + words[i]);
+                   //await context.PostAsync("keyword: " + words[i]);
                     keyword.Add(words[i]);
                 }
                 if (chara[i] == "nr" && i - 1 >= 0 && chara[i - 1] == "nr")
                 {
-                    await context.PostAsync("keyword:" + words[i - 1] + words[i]);
+                    //await context.PostAsync("keyword:" + words[i - 1] + words[i]);
                     keyword.Add(words[i - 1] + words[i]);
                 }
                 if (chara[i] == "nr")
                 {
-                    await context.PostAsync("keyword:" + words[i]);
+                   // await context.PostAsync("keyword:" + words[i]);
                     keyword.Add(words[i]);
                 }
             }
@@ -152,15 +174,15 @@ namespace Bopapp.Dialogs
 
                 if (newres)
                 {
-                    await context.PostAsync("removing " + r1);
+                   /* await context.PostAsync("removing " + r1);
                     await context.PostAsync("removing " + r2);
-                    await context.PostAsync("adding " + stmp);
+                    await context.PostAsync("adding " + stmp);*/
                     finstr = stmp;
                     keyword.Remove(r1);keyword.Remove(r2);
                     keyword.Add(stmp);
                 }
 
-                await context.PostAsync("keysize: " + keyword.Count());
+                //await context.PostAsync("keysize: " + keyword.Count());
                 if (keyword.Count() == 1)
                 {
                     await context.PostAsync(keyword[0]);
@@ -168,7 +190,7 @@ namespace Bopapp.Dialogs
                     context.Wait(AnswerAsync);
                     return;
                 }
-                await context.PostAsync(newres.ToString());
+                //await context.PostAsync(newres.ToString());
             } while (newres == true);
 
             bool ynflag = false;
@@ -286,9 +308,17 @@ namespace Bopapp.Dialogs
                 query_str.Clear();
                 while (query_result.HasMoreResults)
                 {
-                    foreach (dynamic i in await query_result.ExecuteNextAsync())
-                        if (i.properties[data1]!=null)
-                            return i.properties[data1][0].value;
+                    try
+                    {
+                        foreach (dynamic i in await query_result.ExecuteNextAsync())
+                            if (i.properties[data1] != null)
+                                return i.properties[data1][0].value;
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+
                 }
 
                 query_str.Append($"g.V('{data1}')");
@@ -296,9 +326,16 @@ namespace Bopapp.Dialogs
                 query_str.Clear();
                 while (query_result.HasMoreResults)
                 {
-                    foreach (dynamic i in await query_result.ExecuteNextAsync())
-                        if (i.properties[data0] != null)
-                            return i.properties[data1][0].value;
+                    try
+                    {
+                        foreach (dynamic i in await query_result.ExecuteNextAsync())
+                            if (i.properties[data0] != null)
+                                return i.properties[data1][0].value;
+                    }
+                    catch
+                    {
+                        continue;
+                    }
                 }
                 
                 return "没有相关信息。";

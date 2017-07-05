@@ -23,20 +23,27 @@ namespace KnowledgeNetwork
     {
         static void Main(string[] args)
         {
-            List<string> a = new List<string>();
-            a.Add("123");a.Add("123");
-            Console.WriteLine(a.Count());
-            a.Remove("123");
-            Console.WriteLine(a.Count());
+            Tuple<string, string> a = new Tuple<string, string>("1","2");
+            Tuple<string, string> b = new Tuple<string, string>("1", "25445");
 
+            Dictionary<Tuple<string, string>, int> z = new Dictionary<Tuple<string, string>, int>();
+            z[a] = 12312;
+            z[b] = 456;
+            Console.WriteLine(z[a]);
+            Console.WriteLine(z[b]);
 
-            var posSeg = new PosSegmenter();
-           
-            var s = "我的办公地点在哪";
-
-            var tokens = posSeg.Cut(s);
-            Console.WriteLine(string.Join("", tokens.Select(token => string.Format("{0}  {1}\n", token.Word, token.Flag))));
-           Execute();
+            StreamReader sr = new StreamReader("1.txt", Encoding.Default);
+            string line;
+            while ((line = sr.ReadLine()) != null)
+            {
+                string[] split = line.Split(' ');
+                foreach (var i in split)
+                {
+                    Console.Write(i+" ");
+                }
+                Console.WriteLine();
+            }
+            Execute();
     }
 
         static void Execute()
@@ -64,25 +71,44 @@ namespace KnowledgeNetwork
 
             Dictionary<string, string> gremlinQueries = new Dictionary<string, string>
             {
-{"1","g.addV('学院').property('id','大连理工大学白俄罗斯国立大学联合学院')"},
-{"2","g.V('大连理工大学白俄罗斯国立大学联合学院').property('创建','2017年4月10日')"},
-{"3","g.V('大连理工大学白俄罗斯国立大学联合学院').property('电话','0411-84706615')"},
-{"4","g.V('大连理工大学白俄罗斯国立大学联合学院').property('邮箱','dbji@dlut.edu.cn')"},
-{"5","g.addV('学院').property('id','国际教育学院')"},
-{"6","g.V('国际教育学院').property('创建','2013年3月8日')"},
+{"1","g.V('能源与动力学院').property('副院长','王晓放、王正、穆海林、贾明、巴雪冰、陈家模')"},
+{"2","g.V('大连理工大学').property('校区','3个')"},
+
+
             };
             
             foreach (KeyValuePair<string, string> i in gremlinQueries)
             {
                 Console.WriteLine($">>Running {i.Key} : {i.Value}");
-                IDocumentQuery<dynamic> query = client.CreateGremlinQuery<dynamic>(graph, i.Value);
-                while (query.HasMoreResults)
+                try
                 {
-                    Console.WriteLine("more result");
-                    foreach (dynamic result in await query.ExecuteNextAsync())
+                    IDocumentQuery<dynamic> query = client.CreateGremlinQuery<dynamic>(graph, i.Value);
+                    while (query.HasMoreResults)
                     {
-                        Console.WriteLine($"\t>>>>>>>>>>>>>>>>>>>>>>>>>> {JsonConvert.SerializeObject(result)}\n");
+                        Console.WriteLine("more result");
+                        foreach (dynamic result in await query.ExecuteNextAsync())
+                        {
+                            Console.WriteLine($"\t>>>>>>>>>>>>>>>>>>>>>>>>>> {JsonConvert.SerializeObject(result)}\n");
+                            try
+                            {
+                                if (result.properties["85464"] != null)
+                                {
+
+                                    Console.WriteLine(result.properties["简称"][0].value);
+
+                                }
+                            }
+                            catch
+                            {
+                                continue;
+                            }
+
+                        }
                     }
+                }
+                catch
+                {
+                    continue;
                 }
                 Console.WriteLine("========================================================");
                 Console.WriteLine();
